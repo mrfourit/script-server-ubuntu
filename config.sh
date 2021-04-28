@@ -56,7 +56,7 @@ open_config_OPcache() {
             sed -i "s/\;opcache\.enable\=1/opcache\.enable\=1/g" "${INI_CONFIG}"
             sed -i "s/\;opcache\.memory_consumption\=128/opcache\.memory_consumption\=256/g" "${INI_CONFIG}"
             sed -i "s/\;opcache\.max_accelerated_files\=10000/opcache\.max_accelerated_files\=10000/g" "${INI_CONFIG}"
-            sed -i "s/\;opcache_revalidate_freq\=2/opcache_revalidate_freq\=100/g" "${INI_CONFIG}"
+            sed -i "s/\;opcache\.revalidate_freq\=2/opcache\.revalidate_freq\=100/g" "${INI_CONFIG}"
         else
             echo "OPcache da duoc cai dat"
             exit 1
