@@ -48,7 +48,7 @@ open_config_OPcache() {
 
     if [ ! -f "/etc/php/7.1/fpm/php.ini" ]
         then
-            INI_CONFIG="/etc/php/7.2/apache2/php.ini"
+            INI_CONFIG="/etc/php/7.1/apache2/php.ini"
     fi
     
     if grep -q "^;opcache.enable=1" "${INI_CONFIG}"
