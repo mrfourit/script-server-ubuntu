@@ -34,6 +34,27 @@ install_php_fpm() {
     echo "DONE! PHP-FPM"
 }
 
+install_pagespeed() {
+    echo "-----------Cai dat PAGESPEED------"
+    read -p "Ban co muon cai dat PAGESPEED (Y|N)?" yes_no
+    
+    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
+        then
+            echo "PAGESPEED khong duoc cai dat"
+            exit 1
+    fi
+				if [ -f /etc/apache2/mods-available/pagespeed.conf ]
+    					then
+											 echo "PAGESPEED da duoc cai dat"
+        					exit 1
+				fi
+				sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-beta_current_amd64.deb
+    sudo dpkg -i mod-pagespeed-stable*.deb
+				sudo rm -rf mod-pagespeed-stable*.deb
+				echo "ModPagespeedEnableFilters convert_jpeg_to_webp,rewrite_css" >> /etc/apache2/mods-available/pagespeed.conf
+				sudo service apache2 restart
+}
+
 open_config_OPcache() {
     INI_CONFIG="/etc/php/7.1/fpm/php.ini"
     echo "------Open OPcache---------"
@@ -526,6 +547,7 @@ show_switch_case() {
     echo "12. Config OPcache"
     echo "13. Auto restart service die"
     echo "14. Them SWAP"
+    echo "15. Install PAGESPEED"
     echo "-------------------------------"
     read -p "Chon: " step
 
@@ -586,6 +608,10 @@ show_switch_case() {
         14)
             add_swap
             ;;
+			
+								15)
+											install_pagespeed
+											;;
 
     esac
 }
