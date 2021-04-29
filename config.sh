@@ -97,6 +97,96 @@ install_phpmyadmin() {
     echo "DONE! Cai xong PHPMYADMIN"
 }
 
+auto_restart_service_die() {
+    TIME_CRON="* * * * *"
+
+    echo "-------------Auto restart service die"
+
+    read -p "Ban co chac chan config (Y|N)? " yes_no
+    read -p "Ban co muon custom thoi gian chay script. Mac dinh la moi phut: " time_cron_input
+
+    crontab -l > crontab_new
+
+    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
+        then
+            echo "Script khong duoc config"
+            exit 1
+    fi
+
+    if [ "${time_cron_input}" != "" ]
+        then
+            TIME_CRON="${time_cron_input}"
+    fi
+
+    CONTENT="#!/bin/bash
+        if [[ \"\$(/usr/sbin/service mysql status)\" == *\"inactive (dead)\"* ]]
+            then
+                /usr/sbin/service mysql start
+        fi
+        if [[ \"\$(/usr/sbin/service apache2 status)\" == *\"inactive (dead)\"* ]]
+            then
+                /usr/sbin/service apache2 start
+        fi"
+
+    if  grep -q "/home/script_auto_restart.sh" "crontab_new"
+        then
+            sudo rm -rf crontab_new
+            echo "Scrip da duoc cai dat"
+            exit 1
+    fi
+
+    sudo echo "${CONTENT}" >> /home/script_auto_restart.sh
+    sudo chmod +x /home/script_auto_restart.sh
+
+    echo "${TIME_CRON} /home/script_auto_restart.sh" >> crontab_new
+    crontab crontab_new
+    sudo rm -rf crontab_new
+    sudo service cron restart
+    echo "DONE! Script da duoc cai dat"
+}
+
+add_swap() {
+    SIZE_SWAP_DEFAULT=5
+
+    echo "--------Them SWAP-------"
+    read -p "Ban co chac chan config SWAP (Y|N)? " yes_no
+
+    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
+        then
+            echo "Swap khong duoc them"
+            exit 1
+    fi
+
+    if [ -f "/swapfile" ]
+        then
+            echo "Swap da duoc cai dat"
+            exit 1
+    fi
+
+    read -p "Dung luong SWAP. Mac dinh la 5GB: " size_swap
+
+    if [ "${size_swap}" != "" ] 
+        then
+            SIZE_SWAP_DEFAULT="${size_swap}"
+    fi
+
+    sudo bash -c "sudo fallocate -l ${SIZE_SWAP_DEFAULT}G /swapfile"
+
+    sudo chmod 600 /swapfile
+    sudo mkswap /swapfile
+    sudo swapon /swapfile
+
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+    sudo sysctl vm.swappiness=10
+    sudo sysctl vm.vfs_cache_pressure=50
+    
+    echo "vm.swappiness=10
+    vm.vfs_cache_pressure=50" >> /etc/sysctl.conf
+
+    echo "DONE! Them SWAP thanh cong"
+}
+
 delete_domain() {
     echo "--------Xoa domain----------"
     read -p "Domain can xoa: " domain
@@ -118,7 +208,12 @@ delete_domain() {
     cd /etc/apache2/sites-available/
     sudo bash -c "sudo a2dissite ${domain}.conf"
     sudo bash -c "sudo rm -rf ${domain}.conf"
+    if [ -f "/etc/apache2/sites-available/${domain}-le-ssl.conf" ]
+        then
+            sudo bash -c "sudo rm -rf ${domain}-le-ssl.conf"
+    fi
     sudo service apache2 restart
+    echo "DONE! Da xoa domain"
 }
 
 delete_account_ftp() {
@@ -161,6 +256,7 @@ delete_account_ftp() {
 }
 
 add_domain_ssl() {
+    STR_INSERT="\<FilesMatch\ \\\.php\$\>\n\ SetHandler\ \"proxy\:unix\:\/var\/run\/php\/php7\.1\-fpm\.sock\|fcgi\:\/\/localhost\"\n\ \<\/FilesMatch\>\n\ DocumentRoot\ "
     DOMAIN_ALIAS=""
 
     if [ ! -d "/etc/letsencrypt" ]
@@ -188,6 +284,27 @@ add_domain_ssl() {
     fi
 
      sudo bash -c "sudo certbot --apache -d ${1} ${DOMAIN_ALIAS}"
+
+    if [ ! -f "/etc/apache2/sites-available/${1}-le-ssl.conf" ]
+        then
+            exit 1
+    fi
+
+    if [[ "$(cat /etc/apache2/sites-available/${1}.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${1}.conf)" == *"fcgi:"* ]]
+        then
+            echo "Config PHP-FPM for domain HTTPS"
+        else
+            exit 1
+    fi
+
+    if [[ "$(cat /etc/apache2/sites-available/${1}-le-ssl.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${1}-le-ssl.conf)" == *"fcgi:"* ]]
+        then
+            exit 1
+        else
+            sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${1}-le-ssl.conf"
+    fi
+
+    sudo service apache2 restart
 }
 
 show_question_add_ssl_domain() {
@@ -407,6 +524,8 @@ show_switch_case() {
     echo "10. Install PHP-FPM"
     echo "11. Them config PHP-FPM vao website"
     echo "12. Config OPcache"
+    echo "13. Auto restart service die"
+    echo "14. Them SWAP"
     echo "-------------------------------"
     read -p "Chon: " step
 
@@ -458,6 +577,14 @@ show_switch_case() {
 
         12)
             open_config_OPcache
+            ;;
+
+        13)
+            auto_restart_service_die
+            ;;
+
+        14)
+            add_swap
             ;;
 
     esac
