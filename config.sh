@@ -304,8 +304,10 @@ add_domain_ssl() {
             DOMAIN_ALIAS=" -d ${2}"
     fi
 
-     sudo bash -c "sudo certbot --apache -d ${1} ${DOMAIN_ALIAS}"
-
+    sudo bash -c "sudo certbot --apache -d ${1} ${DOMAIN_ALIAS}"
+				
+   		sudo service apache2 restart
+    
     if [ ! -f "/etc/apache2/sites-available/${1}-le-ssl.conf" ]
         then
             exit 1
