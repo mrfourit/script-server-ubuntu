@@ -48,7 +48,7 @@ install_pagespeed() {
 											 echo "PAGESPEED da duoc cai dat"
         					exit 1
 				fi
-				sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-beta_current_amd64.deb
+				sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
     sudo bash -c "sudo dpkg -i mod-pagespeed-stable*.deb"
 				sudo bash -c "sudo rm -rf mod-pagespeed-stable*.deb"
 				echo "ModPagespeedEnableFilters convert_jpeg_to_webp,rewrite_css" >> /etc/apache2/mods-available/pagespeed.conf
