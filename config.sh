@@ -51,7 +51,7 @@ install_pagespeed() {
 				sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
     sudo bash -c "sudo dpkg -i mod-pagespeed-stable*.deb"
 				sudo bash -c "sudo rm -rf mod-pagespeed-stable*.deb"
-				echo "ModPagespeedEnableFilters convert_jpeg_to_webp,rewrite_css" >> /etc/apache2/mods-available/pagespeed.conf
+				sudo sed -i "s/<\/IfModule>/ModPagespeedEnableFilters\ convert_jpeg_to_webp\,rewrite_css\n<\/IfModule>/g" /etc/apache2/mods-available/pagespeed.conf
 				sudo service apache2 restart
 }
 
