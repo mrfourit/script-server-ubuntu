@@ -527,6 +527,16 @@ add_config_php_fpm() {
             sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}.conf"
     fi
 
+				if [ -f "/etc/apache2/sites-available/${domain}-le-ssl.conf" ]
+        then
+            if [[ "$(cat /etc/apache2/sites-available/${domain}-le-ssl.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${domain}-le-ssl.conf)" == *"fcgi:"* ]]
+        									then
+            									echo "Da config PHP-FPM for SSL"
+        									else
+           										 sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}-le-ssl.conf"
+    									fi
+    fi
+                                
     sudo service apache2 restart
 
     echo "DONE! Them config PHP-FPM vao domain ${domain}"
