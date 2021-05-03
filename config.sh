@@ -43,16 +43,18 @@ install_pagespeed() {
             echo "PAGESPEED khong duoc cai dat"
             exit 1
     fi
-				if [ -f /etc/apache2/mods-available/pagespeed.conf ]
-    					then
-											 echo "PAGESPEED da duoc cai dat"
-        					exit 1
-				fi
-				sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
+
+    if [ -f /etc/apache2/mods-available/pagespeed.conf ]
+        then
+            echo "PAGESPEED da duoc cai dat"
+            exit 1
+    fi
+
+    sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
     sudo bash -c "sudo dpkg -i mod-pagespeed-stable*.deb"
-				sudo bash -c "sudo rm -rf mod-pagespeed-stable*.deb"
-				sudo sed -i "s/<\/IfModule>/ModPagespeedEnableFilters\ convert_jpeg_to_webp\,rewrite_css\n<\/IfModule>/g" /etc/apache2/mods-available/pagespeed.conf
-				sudo service apache2 restart
+    sudo bash -c "sudo rm -rf mod-pagespeed-stable*.deb"
+    sudo sed -i "s/<\/IfModule>/ModPagespeedEnableFilters\ convert_jpeg_to_webp\,rewrite_css\n<\/IfModule>/g" /etc/apache2/mods-available/pagespeed.conf
+    sudo service apache2 restart
 }
 
 open_config_OPcache() {
@@ -305,8 +307,8 @@ add_domain_ssl() {
     fi
 
     sudo bash -c "sudo certbot --apache -d ${1} ${DOMAIN_ALIAS}"
-				
-   		sudo service apache2 restart
+
+    sudo service apache2 restart
     
     if [ ! -f "/etc/apache2/sites-available/${1}-le-ssl.conf" ]
         then
@@ -529,14 +531,14 @@ add_config_php_fpm() {
             sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}.conf"
     fi
 
-				if [ -f "/etc/apache2/sites-available/${domain}-le-ssl.conf" ]
+    if [ -f "/etc/apache2/sites-available/${domain}-le-ssl.conf" ]
         then
             if [[ "$(cat /etc/apache2/sites-available/${domain}-le-ssl.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${domain}-le-ssl.conf)" == *"fcgi:"* ]]
-        									then
-            									echo "Da config PHP-FPM for SSL"
-        									else
-           										 sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}-le-ssl.conf"
-    									fi
+                then
+                    echo "Da config PHP-FPM for SSL"
+                else
+                    sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}-le-ssl.conf"
+            fi
     fi
                                 
     sudo service apache2 restart
@@ -620,10 +622,10 @@ show_switch_case() {
         14)
             add_swap
             ;;
-			
-								15)
-											install_pagespeed
-											;;
+
+        15)
+            install_pagespeed
+            ;;
 
     esac
 }
