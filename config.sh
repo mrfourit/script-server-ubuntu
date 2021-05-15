@@ -9,6 +9,7 @@ install_apache() {
 }
 
 install_mysql() {
+    sudo apt update
     apt-get install mysql-server -y
 
     sudo mysql -u root -e "ALTER USER \"root\"@\"localhost\" IDENTIFIED WITH mysql_native_password BY \"${1}\";FLUSH PRIVILEGES;"
