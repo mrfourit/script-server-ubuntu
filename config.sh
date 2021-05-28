@@ -64,6 +64,11 @@ open_config_OPcache() {
 
     read -p "Ban co chac chan muon config OPcache (Y|N)? " yes_no
 
+    if [ ! -d "/etc/php" ]
+        then
+            echo "Ban chua cai dat PHP"
+    fi
+
     if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
         then
             echo "OPcache khong duoc config"
@@ -361,6 +366,11 @@ show_question_add_domain() {
     read -p "Nhap duong dan website: " path_web
     read -p "Nhap email quan tri server: " email_report
 
+    if [ ! -d "/etc/apache2" ]
+        then
+            echo "Ban chua cai dat apache2"
+    fi
+
     add_domain "${domain}" "${domain_alias}" "${email_report}" "${path_web}"
 }
 
@@ -391,6 +401,8 @@ add_domain() {
         then
             SERVER_ADMIN="${3}"
     fi
+
+    sudo bash -c "mkdir -p ${4}"
 
     CONTENT_FILE="<VirtualHost *:80>
         ServerName ${1}
