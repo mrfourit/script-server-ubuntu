@@ -148,14 +148,42 @@ auto_restart_service_die() {
     fi
 
     CONTENT="#!/bin/bash
-        if [[ \"\$(/usr/sbin/service mysql status)\" == *\"inactive (dead)\"* ]]
+
+        log_file() {
+        status=\"INFO\"
+
+        if [ \"\${3}\" != \"\" ]
             then
-                /usr/sbin/service mysql start
+                status=\"\${3}\"
         fi
-        if [[ \"\$(/usr/sbin/service apache2 status)\" == *\"inactive (dead)\"* ]]
-            then
-                /usr/sbin/service apache2 start
-        fi"
+
+        folder_log=\"\${1}\"
+
+        sudo mkdir -p \"\${folder_log}\"
+
+        date_log=\"\$(date +'%d-%m-%Y %T')\"
+
+        content_log=\"\${2}\"
+
+        echo \"[\${date_log}]  [\${status}]  \${content_log}\" >> \"\${folder_log}/log.txt\"
+        }
+
+        script_run() {
+            LOG_FOLDER=\"/var/log/script_restart_auto\"
+
+            if [[ \"\$(/usr/sbin/service mysql status)\" == *\"inactive (dead)\"* ]]
+                then
+                    /usr/sbin/service mysql start
+                    log_file \"\${LOG_FOLDER}\" \"Mysql die\" \"ERROR\"
+            fi
+            if [[ \"\$(/usr/sbin/service apache2 status)\" == *\"inactive (dead)\"* ]]
+                then
+                    /usr/sbin/service apache2 start
+                    log_file \"\${LOG_FOLDER}\" \"Apache2 die\" \"ERROR\"
+            fi
+        }
+
+        script_run"
 
     if  grep -q "/home/script_auto_restart.sh" "crontab_new"
         then
@@ -172,6 +200,27 @@ auto_restart_service_die() {
     sudo rm -rf crontab_new
     sudo service cron restart
     echo "DONE! Script da duoc cai dat"
+}
+
+delete_swap() {
+    if [ ! -f "/swapfile" ]
+        then
+            echo "Khong ton tai /swapfile"
+            exit 1
+    fi
+
+    sudo swapoff -v /swapfile
+
+    CHECK_FSTAB_EXIST="$(grep  "\/aswapfile\ none\ swap\ sw\ 0\ 0" /etc/fstab)"
+
+    if [ "${CHECK_FSTAB_EXIST}" == "" ]
+        then
+            echo "Khong ton tai config /etc/fstab. Vui long check"
+        else
+            sudo sed -i 's/\/swapfile\ none\ swap\ sw\ 0\ 0/\ /g' /etc/fstab
+            sudo rm -rf /swapfile
+            echo "Done! Xoa swap thanh cong"
+    fi
 }
 
 add_swap() {
@@ -377,8 +426,7 @@ show_question_add_domain() {
 add_domain() {
     ALIAS_DOMAIN="";
     SERVER_ADMIN="webmaster@localhost"
-
-    sudo mkdir -p /var/log/apache2
+    LOG_FOLDER="/var/log/apache2/${1}"
 
     if [ "${1}" == "" ]
         then
@@ -402,6 +450,8 @@ add_domain() {
             SERVER_ADMIN="${3}"
     fi
 
+    sudo mkdir -p "${LOG_FOLDER}"
+
     sudo bash -c "mkdir -p ${4}"
 
     CONTENT_FILE="<VirtualHost *:80>
@@ -419,8 +469,8 @@ add_domain() {
             Require all granted
         </Directory>
 
-        ErrorLog /var/log/apache2/error.log
-        CustomLog /var/log/apache2/access.log combined
+        ErrorLog ${LOG_FOLDER}/error.log
+        CustomLog ${LOG_FOLDER}/access.log combined
     </VirtualHost>"
 
     sudo bash -c "echo \"${CONTENT_FILE}\" >> /etc/apache2/sites-available/${1}.conf"
@@ -574,7 +624,8 @@ show_switch_case() {
     echo "12. Config OPcache"
     echo "13. Auto restart service die"
     echo "14. Them SWAP"
-    echo "15. Install PAGESPEED"
+    echo "14. Delete SWAP"
+    echo "16. Install PAGESPEED"
     echo "-------------------------------"
     read -p "Chon: " step
 
@@ -637,6 +688,10 @@ show_switch_case() {
             ;;
 
         15)
+            delete_swap
+            ;;
+
+        16)
             install_pagespeed
             ;;
 
