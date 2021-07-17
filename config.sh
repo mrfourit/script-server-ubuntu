@@ -466,13 +466,19 @@ limit_project() {
     
     mkdir -p "${path_project}"
     mkdir -p "${path_backup}"
-    cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
+    if [ "$(cd path_project && ls -A)" != "" ]
+        then
+    									cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
+    fi
     sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
 				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
 				sudo mount "${path_project}"
-    cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
-    sudo rm -rf "${path_backup}"
+    if [ "$(cd path_backup && ls -A)" != "" ]
+        then
+    								cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
+    fi
+   		sudo rm -rf "${path_backup}"
     df -h
     echo "Done! Limit project done"
 }
