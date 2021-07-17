@@ -466,9 +466,7 @@ show_yes_no_question() {
 				fi
 }
                     
-show_question_increase_size_project() {
-                        
-                    }
+show_question_increase_size_project() {}
 
 add_domain() {
     ALIAS_DOMAIN="";
