@@ -624,7 +624,7 @@ show_switch_case() {
     echo "12. Config OPcache"
     echo "13. Auto restart service die"
     echo "14. Them SWAP"
-    echo "14. Delete SWAP"
+    echo "15. Delete SWAP"
     echo "16. Install PAGESPEED"
     echo "-------------------------------"
     read -p "Chon: " step
