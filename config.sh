@@ -453,6 +453,7 @@ limit_project() {
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
 				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
 				sudo mount "${path_project}"
+    cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
     echo "Done! Limit project done"
 }
                         
