@@ -473,6 +473,7 @@ limit_project() {
 				sudo mount "${path_project}"
     cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
     sudo rm -rf "${path_backup}"
+    df -h
     echo "Done! Limit project done"
 }
                         
