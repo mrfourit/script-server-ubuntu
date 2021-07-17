@@ -448,8 +448,7 @@ limit_project() {
     path_backup="${path_project}_backup_${date_now}"
     mkdir -p "${path_project}"
     mkdir -p "${path_backup}"
-    cd "${path_project}"
-    mv $(ls -A) "${path_backup}"
+    cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
     sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
 				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
