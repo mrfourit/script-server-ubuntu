@@ -446,6 +446,24 @@ limit_project() {
     size="${3}"
     date_now="$(date +'%d_%m_%y_%H_%M_%S')"
     path_backup="${path_project}_backup_${date_now}"
+    if [ -f "${path_image}" ]
+       then
+										echo "Filesystem da ton tai"
+           exit 1
+    fi
+
+    if grep -q "${path_image} " /etc/fstab
+       then
+										echo "Filesystem da ton tai /etc/fstab"
+           exit 1
+    fi
+
+    if grep -q "${path_project} " /etc/fstab
+       then
+										echo "Folder da ton tai /etc/fstab"
+           exit 1
+    fi
+    
     mkdir -p "${path_project}"
     mkdir -p "${path_backup}"
     cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
@@ -454,6 +472,7 @@ limit_project() {
 				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
 				sudo mount "${path_project}"
     cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
+    sudo rm -rf "${path_backup}"
     echo "Done! Limit project done"
 }
                         
