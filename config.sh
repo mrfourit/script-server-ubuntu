@@ -459,7 +459,7 @@ limit_project() {
 show_yes_no_question() {
 				read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
     
-    if [ [ yes_no != "Y" ] && [ yes_no != "y" ] ]
+    if [ yes_no != "Y" ] && [ yes_no != "y" ]
 						then
 										exit 1
 				fi
