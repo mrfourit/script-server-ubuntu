@@ -437,7 +437,7 @@ show_question_limit_project() {
 
 				show_yes_no_question "${path_project}" "${path_image}" "${size}"
     
-    limit_project
+    limit_project "${path_project}" "${path_image}" "${size}"
 }
                         
 limit_project() {
