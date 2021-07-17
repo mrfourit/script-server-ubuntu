@@ -422,6 +422,53 @@ show_question_add_domain() {
 
     add_domain "${domain}" "${domain_alias}" "${email_report}" "${path_web}"
 }
+                        
+show_question_limit_project() {
+				echo "---------------Limit project----------------"
+    
+    read -p "Nhap duong dan project: " path_project
+    read -p "Nhap duong dan image (filesystem): " path_image
+    read -p "Nhap kich thuoc folder (size: MB): " size
+				
+    if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
+							then
+									exit 1
+    fi
+
+				show_yes_no_question "${path_project}" "${path_image}" "${size}"
+    
+    limit_project
+}
+                        
+limit_project() {
+				path_project="${1}"
+    path_image="${2}"
+    size="${3}"
+    date_now="$(date +'%d_%m_%y_%H_%M_%S')"
+    path_backup="${path_project}_backup_${date_now}"
+    mkdir -p "${path_project}"
+    mkdir -p "${path_backup}"
+    cd "${path_project}"
+    mv $(ls -A) "${path_backup}"
+    sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
+    sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
+				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
+				sudo mount "${path_project}"
+    echo "Done! Limit project done"
+}
+                        
+show_yes_no_question() {
+				read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
+    
+    if [ yes_no != "Y" ] && [ yes_no != "y" ]
+						then
+										exit 1
+				fi
+}
+                    
+show_question_increase_size_project() {
+                        
+                    }
 
 add_domain() {
     ALIAS_DOMAIN="";
@@ -626,6 +673,8 @@ show_switch_case() {
     echo "14. Them SWAP"
     echo "15. Delete SWAP"
     echo "16. Install PAGESPEED"
+    echo "17. Limit size project"
+    echo "18. Tang dung luong project"
     echo "-------------------------------"
     read -p "Chon: " step
 
@@ -694,6 +743,14 @@ show_switch_case() {
         16)
             install_pagespeed
             ;;
+
+								17)
+												show_question_limit_project
+											;;
+
+								18)
+												show_question_increase_size_project
+											;;
 
     esac
 }
