@@ -432,6 +432,7 @@ show_question_limit_project() {
 				
     if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
 							then
+									echo "Nhap thieu thong tin"
 									exit 1
     fi
 
@@ -482,6 +483,32 @@ limit_project() {
     df -h
     echo "Done! Limit project done"
 }
+                    
+increase_limit_project() {
+				path_project="${1}"
+    path_image="${2}"
+    size="${3}"
+    date_now="$(date +'%d_%m_%y_%H_%M_%S')"
+    path_backup="${path_project}_backup_${date_now}"
+  
+    mkdir -p "${path_project}"
+    mkdir -p "${path_backup}"
+    if [ "$(cd ${path_project} && ls -A)" != "" ]
+        then
+    									cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
+    fi
+				sudo umount "${path_project}"
+    sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
+    sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
+				sudo mount "${path_project}"
+    if [ "$(cd ${path_backup} && ls -A)" != "" ]
+        then
+    								cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
+    fi
+   		sudo rm -rf "${path_backup}"
+    df -h
+    echo "Done! Increase limit project done"
+}
                         
 show_yes_no_question() {
 				read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
@@ -493,7 +520,21 @@ show_yes_no_question() {
 }
                     
 show_question_increase_size_project() {
-    echo "a"               
+    echo "--------------Tang limit project----------------"
+
+    read -p "Nhap duong dan project: " path_project
+    read -p "Nhap duong dan image (filesystem): " path_image
+    read -p "Nhap kich thuoc folder (size: MB): " size
+				
+    if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
+							then
+									echo "Nhap thieu thong tin"
+									exit 1
+    fi
+
+				show_yes_no_question
+    
+    increase_limit_project "${path_project}" "${path_image}" "${size}"
 }
 
 add_domain() {
