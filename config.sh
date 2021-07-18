@@ -1,6 +1,7 @@
 #!/bin/bash
 
 install_apache() {
+    sudo apt update
     sudo apt-get install apache2 -y
 
     enable_mod_apache
@@ -424,44 +425,44 @@ show_question_add_domain() {
 }
                         
 show_question_limit_project() {
-				echo "---------------Limit project----------------"
-    
+    echo "---------------Limit project----------------"
+
     read -p "Nhap duong dan project: " path_project
     read -p "Nhap duong dan image (filesystem): " path_image
     read -p "Nhap kich thuoc folder (size: MB): " size
-				
+
     if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
-							then
-									echo "Nhap thieu thong tin"
-									exit 1
+        then
+            echo "Nhap thieu thong tin"
+            exit 1
     fi
 
-				show_yes_no_question "${path_project}" "${path_image}" "${size}"
-    
+    show_yes_no_question "${path_project}" "${path_image}" "${size}"
+
     limit_project "${path_project}" "${path_image}" "${size}"
 }
-                        
+
 limit_project() {
-				path_project="${1}"
+    path_project="${1}"
     path_image="${2}"
     size="${3}"
     date_now="$(date +'%d_%m_%y_%H_%M_%S')"
     path_backup="${path_project}_backup_${date_now}"
     if [ -f "${path_image}" ]
        then
-										echo "Filesystem da ton tai"
+            echo "Filesystem da ton tai"
            exit 1
     fi
 
     if grep -q "${path_image} " /etc/fstab
        then
-										echo "Filesystem da ton tai /etc/fstab"
-           exit 1
+            echo "Filesystem da ton tai /etc/fstab"
+            exit 1
     fi
 
     if grep -q "${path_project} " /etc/fstab
        then
-										echo "Folder da ton tai /etc/fstab"
+            echo "Folder da ton tai /etc/fstab"
            exit 1
     fi
     
@@ -469,23 +470,23 @@ limit_project() {
     mkdir -p "${path_backup}"
     if [ "$(cd ${path_project} && ls -A)" != "" ]
         then
-    									cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
+            cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
     fi
     sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
-				echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
-				sudo mount "${path_project}"
+    echo "${path_image} ${path_project} ext3 rw,loop,usrquota,grpquota 0 0" >> /etc/fstab
+    sudo mount "${path_project}"
     if [ "$(cd ${path_backup} && ls -A)" != "" ]
         then
-    								cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
+            cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
     fi
-   		sudo rm -rf "${path_backup}"
+    sudo rm -rf "${path_backup}"
     df -h
     echo "Done! Limit project done"
 }
                     
 increase_limit_project() {
-				path_project="${1}"
+                path_project="${1}"
     path_image="${2}"
     size="${3}"
     date_now="$(date +'%d_%m_%y_%H_%M_%S')"
@@ -495,45 +496,45 @@ increase_limit_project() {
     mkdir -p "${path_backup}"
     if [ "$(cd ${path_project} && ls -A)" != "" ]
         then
-    									cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
+            cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
     fi
-				cd ..
-				sudo umount "${path_project}"
+    cd ..
+    sudo umount "${path_project}"
     sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
-				sudo mount "${path_project}"
+                sudo mount "${path_project}"
     if [ "$(cd ${path_backup} && ls -A)" != "" ]
         then
-    								cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
+            cd "${path_backup}" && sudo mv $(ls -A) "${path_project}"
     fi
-   		sudo rm -rf "${path_backup}"
+    sudo rm -rf "${path_backup}"
     df -h
     echo "Done! Increase limit project done"
 }
                         
 show_yes_no_question() {
-				read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
+                read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
     
     if [ "${yes_no}" != "Y" ] && [ "${yes_no}" != "y" ]
-						then
-										exit 1
-				fi
+        then
+            exit 1
+    fi
 }
-                    
+
 show_question_increase_size_project() {
     echo "--------------Tang limit project----------------"
 
     read -p "Nhap duong dan project: " path_project
     read -p "Nhap duong dan image (filesystem): " path_image
     read -p "Nhap kich thuoc folder (size: MB): " size
-				
+                
     if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
-							then
-									echo "Nhap thieu thong tin"
-									exit 1
+        then
+            echo "Nhap thieu thong tin"
+            exit 1
     fi
 
-				show_yes_no_question
+    show_yes_no_question
     
     increase_limit_project "${path_project}" "${path_image}" "${size}"
 }
@@ -718,7 +719,7 @@ add_config_php_fpm() {
                     sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}-le-ssl.conf"
             fi
     fi
-                                
+
     sudo service apache2 restart
 
     echo "DONE! Them config PHP-FPM vao domain ${domain}"
@@ -812,13 +813,13 @@ show_switch_case() {
             install_pagespeed
             ;;
 
-								17)
-												show_question_limit_project
-											;;
+        17)
+            show_question_limit_project
+            ;;
 
-								18)
-												show_question_increase_size_project
-											;;
+        18)
+            show_question_increase_size_project
+            ;;
 
     esac
 }
