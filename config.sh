@@ -497,6 +497,7 @@ increase_limit_project() {
         then
     									cd "${path_project}" && sudo mv $(ls -A) "${path_backup}"
     fi
+				cd ..
 				sudo umount "${path_project}"
     sudo dd if=/dev/zero of="${path_image}" count="$((size*2048))"
     sudo /sbin/mkfs -t ext3 -q "${path_image}" -F
