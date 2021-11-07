@@ -339,10 +339,9 @@ add_domain_ssl() {
     DOMAIN="$1"
     EMAIL="$3"
     DOMAIN_ALIAS_REDIRECT=""
-         
-    sudo su
-    cd ~
     CURRENT_PATH="$(pwd)"
+                
+    cd ~
 
     if [ "$DOMAIN_ALIAS" != '' ]
         then
