@@ -368,7 +368,7 @@ add_domain_ssl() {
     
     sudo cp "/etc/apache2/sites-available/$DOMAIN.conf" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"         
     
-    SSL_STRING="SSLCertificateFile \/etc\/letsencrypt\/live\/fourtestphp.tk\/fullchain.pem \nSSLCertificateKeyFile \/etc\/letsencrypt\/live\/fourtestphp.tk\/privkey.pem \nSSLEngine on </VirtualHost>"
+    SSL_STRING="SSLCertificateFile \/root\/.acme.sh\/$DOMAIN\/fullchain.cer \nSSLCertificateKeyFile \/root\/.acme.sh\/$DOMAIN/$DOMAIN.key \nSSLEngine on <\/VirtualHost>"
     FORCE_REDIRECT="RewriteEngine on \nRewriteCond %{SERVER_NAME} =$domain [OR] $DOMAIN_ALIAS_REDIRECT \nRewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
     sudo sed -i "s/<\/VirtualHost>/\$SSL_STRING" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
     sudo sed -i "s/\*\.80/\*\.443/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
