@@ -353,15 +353,15 @@ add_domain_ssl() {
          					echo "Khong tin tai conf vhost"
               exit 1
 				fi
-    if [[ ! -f "~/.acme.sh/acme.sh" ]]
+    if [[ ! -f "/root/.acme.sh/acme.sh" ]]
         then
              sudo curl https://get.acme.sh | sudo sh -s email="$EMAIL"
-    									cd "~/.acme.sh"
+    									cd "/root/.acme.sh"
              bash ./acme.sh --register-account -m "$email"
              cd "$CURRENT_PATH"
     fi
 
-    cd "~/.acme.sh"
+    cd "/root/.acme.sh"
 
     bash ./acme.sh --issue --apache -d "$DOMAIN" "$DOMAIN_ALIAS"
     
