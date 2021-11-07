@@ -335,66 +335,59 @@ delete_account_ftp() {
 }
 
 add_domain_ssl() {
-    STR_INSERT="\<FilesMatch\ \\\.php\$\>\n\ SetHandler\ \"proxy\:unix\:\/var\/run\/php\/php7\.1\-fpm\.sock\|fcgi\:\/\/localhost\"\n\ \<\/FilesMatch\>\n\ DocumentRoot\ "
-    DOMAIN_ALIAS=""
+    DOMAIN_ALIAS="$2"
+    DOMAIN="$1"
+    EMAIL="$3"
+    DOMAIN_ALIAS_REDIRECT=""
+         
+    sudo su
+    cd ~
+    CURRENT_PATH="$(pwd)"
 
-    if [ ! -d "/etc/letsencrypt" ]
+    if [ "$DOMAIN_ALIAS" != '' ]
         then
-            sudo apt update
-
-            sudo add-apt-repository -y ppa:certbot/certbot
-
-            if [[  "$(cat /etc/os-release)" == *"18.04"*  ]]
-                then
-                    sudo apt install -y python-certbot-apache
-                else
-                    sudo apt install -y certbot python3-certbot-apache
-            fi
-            crontab -l > crontab_new
-            echo "0 0 1 * * certbot renew && service apache2 restart" >> crontab_new
-            crontab crontab_new
-            sudo rm -rf crontab_new
-            sudo service cron restart
+            DOMAIN_ALIAS=" -d $DOMAIN_ALIAS"
+            DOMAIN_ALIAS_REDIRECT="\nRewriteCond %{SERVER_NAME} =$DOMAIN_ALIAS \n</VirtualHost>"
+    fi
+    if [[ ! -f "/etc/apache2/sites-available/$DOMAIN.conf" ]]
+								then
+         					echo "Khong tin tai conf vhost"
+              exit 1
+				fi
+    if [[ ! -f "~/.acme.sh/acme.sh" ]]
+        then
+             sudo curl https://get.acme.sh | sudo sh -s email="$EMAIL"
+    									cd "~/.acme.sh"
+             bash ./acme.sh --register-account -m "$email"
+             cd "$CURRENT_PATH"
     fi
 
-    if [ "${2}" != '' ]
-        then
-            DOMAIN_ALIAS=" -d ${2}"
-    fi
+    cd "~/.acme.sh"
 
-    sudo bash -c "sudo certbot --apache -d ${1} ${DOMAIN_ALIAS}"
-
-    sudo service apache2 restart
+    bash ./acme.sh --issue --apache -d "$DOMAIN" "$DOMAIN_ALIAS"
     
-    if [ ! -f "/etc/apache2/sites-available/${1}-le-ssl.conf" ]
-        then
-            exit 1
-    fi
-
-    if [[ "$(cat /etc/apache2/sites-available/${1}.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${1}.conf)" == *"fcgi:"* ]]
-        then
-            echo "Config PHP-FPM for domain HTTPS"
-        else
-            exit 1
-    fi
-
-    if [[ "$(cat /etc/apache2/sites-available/${1}-le-ssl.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${1}-le-ssl.conf)" == *"fcgi:"* ]]
-        then
-            exit 1
-        else
-            sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${1}-le-ssl.conf"
-    fi
-
+    sudo cp "/etc/apache2/sites-available/$DOMAIN.conf" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"         
+    
+    SSL_STRING="SSLCertificateFile \/etc\/letsencrypt\/live\/fourtestphp.tk\/fullchain.pem \nSSLCertificateKeyFile \/etc\/letsencrypt\/live\/fourtestphp.tk\/privkey.pem \nSSLEngine on </VirtualHost>"
+    FORCE_REDIRECT="RewriteEngine on \nRewriteCond %{SERVER_NAME} =$domain [OR] $DOMAIN_ALIAS_REDIRECT \nRewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+    sudo sed -i "s/<\/VirtualHost>/\$SSL_STRING" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
+    sudo sed -i "s/\*\.80/\*\.443/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
+    sudo sed -i "s/<\/VirtualHost>/\$DOMAIN_ALIAS_REDIRECT" "/etc/apache2/sites-available/$DOMAIN.conf"
+    cd /etc/apache2/sites-available
+    sudo a2ensite "$DOMAIN-ssl.conf"
     sudo service apache2 restart
 }
 
 show_question_add_ssl_domain() {
     echo "-------------------------------------------------------------"
-
+    
     read -p "Nhap domain: " domain
     read -p "Nhap domain alias (neu co): " domain_alias
-
-    add_domain_ssl "${domain}" "${domain_alias}"
+    if [[ ! -f "~/.acme.sh/acme.sh" ]]
+								then
+             read -p "Nhap email: " email
+    fi
+    add_domain_ssl "${domain}" "${domain_alias}" "${email}"
 }
 
 show_question_root_password() {
