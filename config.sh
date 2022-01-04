@@ -340,7 +340,8 @@ add_domain_ssl() {
     EMAIL="$3"
     DOMAIN_ALIAS_REDIRECT=""
     CURRENT_PATH="$(pwd)"
-                
+              
+    sudo su
     sudo mkdir -p /root
     cd /root
 
