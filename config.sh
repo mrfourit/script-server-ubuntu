@@ -341,7 +341,11 @@ add_domain_ssl() {
     DOMAIN_ALIAS_REDIRECT=""
     CURRENT_PATH="$(pwd)"
               
-    sudo su
+    if (( EUID != 0 ))
+    			then
+								echo "Vui long run root"
+         exit 1
+    fi
     sudo mkdir -p /root
     cd /root
 
