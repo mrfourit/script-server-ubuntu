@@ -346,6 +346,12 @@ add_domain_ssl() {
 								echo "Vui long run root"
          exit 1
     fi
+
+    if [ "$EMAIL" == "" ]
+      then
+          echo "Nhap email"
+          exit 1
+    fi
     sudo mkdir -p /root
     cd /root
 
