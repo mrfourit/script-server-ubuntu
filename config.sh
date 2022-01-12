@@ -113,17 +113,28 @@ install_php() {
 }
 
 install_phpmyadmin() {
+    STR_ALIAS="Alias /phpmyadmin \"/usr/share/phpmyadmin/\"
+<Directory \"/usr/share/phpmyadmin/\">
+    Order allow,deny
+    Allow from all
+    Require all granted
+</Directory>"
+    CONFIG_PHPMYADMIN="\$cfg['blowfish_secret'] = 'L.cWeE{beVu9}yHQuHz3ki5ysndddddl';
+
+\$cfg['TempDir'] = \"/usr/share/phpmyadmin/tmp/\";"
     sudo apt update
 
-    if [[  "$(cat /etc/os-release)" == *"18.04"*  ]]
-        then 
-            sudo apt-get install -y phpmyadmin php-mbstring php-gettext
-        else
-            sudo apt-get install -y phpmyadmin php-mbstring
-    fi
-
-    sudo phpenmod mbstring
-    sudo systemctl restart apache2
+    cd /usr/share
+    wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
+    unzip phpMyAdmin-5.1.1-all-languages.zip
+    mv phpMyAdmin-5.1.1-all-languages.zip phpmyadmin
+    sudo chmod -R 755 phpmyadmin
+    sudo sed -i "s/<\/VirtualHost>/$STR_ALIAS\n<\/VirtualHost>/" "/etc/apache2/sites-available/000-default.conf"
+    cd phpmyadmin
+    mv config.sample.inc.php config.inc.php
+    echo "${CONFIG_PHPMYADMIN}" >> config.inc.php
+    mkdir tmp
+    chmod 777 tmp
     echo "DONE! Cai xong PHPMYADMIN"
 }
 
@@ -340,37 +351,40 @@ add_domain_ssl() {
     EMAIL="$3"
     DOMAIN_ALIAS_REDIRECT=""
     CURRENT_PATH="$(pwd)"
-              
+
     if (( EUID != 0 ))
-    			then
-								echo "Vui long run root"
-         exit 1
+        then
+            echo "Vui long run root"
+        exit 1
     fi
 
     if [ "$EMAIL" == "" ]
-      then
-          echo "Nhap email"
-          exit 1
+        then
+            echo "Nhap email"
+            exit 1
     fi
+
     sudo mkdir -p /root
     cd /root
 
     if [ "$DOMAIN_ALIAS" != '' ]
         then
             DOMAIN_ALIAS=" -d $DOMAIN_ALIAS"
-            DOMAIN_ALIAS_REDIRECT="\nRewriteCond %{SERVER_NAME} =$DOMAIN_ALIAS \n</VirtualHost>"
+            DOMAIN_ALIAS_REDIRECT="[OR]\n\tRewriteCond %{SERVER_NAME} =$DOMAIN_ALIAS \n</VirtualHost>"
     fi
+
     if [[ ! -f "/etc/apache2/sites-available/$DOMAIN.conf" ]]
-								then
-         					echo "Khong tin tai conf vhost"
-              exit 1
-				fi
+        then
+            echo "Khong tin tai conf vhost"
+            exit 1
+    fi
+
     if [[ ! -f "/root/.acme.sh/acme.sh" ]]
         then
-             sudo curl https://get.acme.sh | sudo sh -s email="$EMAIL"
-    									cd "/root/.acme.sh"
-             bash ./acme.sh --register-account -m "$email"
-             cd "$CURRENT_PATH"
+            sudo curl https://get.acme.sh | sudo sh -s email="$EMAIL"
+            cd "/root/.acme.sh"
+            bash ./acme.sh --register-account -m "$email"
+            cd "$CURRENT_PATH"
     fi
 
     cd "/root/.acme.sh"
@@ -379,11 +393,12 @@ add_domain_ssl() {
     
     sudo cp "/etc/apache2/sites-available/$DOMAIN.conf" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"         
     
-    SSL_STRING="SSLCertificateFile \/root\/.acme.sh\/$DOMAIN\/fullchain.cer \nSSLCertificateKeyFile \/root\/.acme.sh\/$DOMAIN/$DOMAIN.key \nSSLEngine on <\/VirtualHost>"
-    FORCE_REDIRECT="RewriteEngine on \nRewriteCond %{SERVER_NAME} =$domain [OR] $DOMAIN_ALIAS_REDIRECT \nRewriteRule ^ https:\/\/%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]"
-    sudo sed -i "s/<\/VirtualHost>/\$SSL_STRING/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
-    #sudo sed -i "s/\*\.80/\*\.443/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
-    #sudo sed -i "s/<\/VirtualHost>/\$DOMAIN_ALIAS_REDIRECT/" "/etc/apache2/sites-available/$DOMAIN.conf"
+    SSL_STRING="\tSSLCertificateFile \/root\/\.acme\.sh\/$DOMAIN\/fullchain\.cer\n\tSSLCertificateKeyFile \/root\/.acme.sh\/$DOMAIN\/$DOMAIN\.key\n\tSSLEngine on\n<\/VirtualHost\>"
+    FORCE_REDIRECT="\tRewriteEngine on\n\tRewriteCond %{SERVER_NAME} =$DOMAIN [OR]\n\tRewriteCond %{SERVER_NAME} =$DOMAIN_ALIAS_REDIRECT\n\tRewriteRule ^ https:\/\/%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]"
+    sudo sed -i "s/<\/VirtualHost>/$SSL_STRING/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
+    sudo sed -i "s/\:80>/\:443>/" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"
+    sudo sed -i "s/<\/VirtualHost>/$FORCE_REDIRECT\n<\/VirtualHost>/" "/etc/apache2/sites-available/$DOMAIN.conf"
+
     cd /etc/apache2/sites-available
     sudo a2ensite "$DOMAIN-ssl.conf"
     sudo service apache2 restart
@@ -395,8 +410,8 @@ show_question_add_ssl_domain() {
     read -p "Nhap domain: " domain
     read -p "Nhap domain alias (neu co): " domain_alias
     if [[ ! -f "~/.acme.sh/acme.sh" ]]
-								then
-             read -p "Nhap email: " email
+        then
+            read -p "Nhap email: " email
     fi
     add_domain_ssl "${domain}" "${domain_alias}" "${email}"
 }
@@ -546,7 +561,7 @@ show_question_increase_size_project() {
 add_domain() {
     ALIAS_DOMAIN="";
     SERVER_ADMIN="webmaster@localhost"
-    LOG_FOLDER="/var/log/apache2/${1}"
+    LOG_FOLDER="/var/log/apache2"
 
     if [ "${1}" == "" ]
         then
@@ -575,23 +590,23 @@ add_domain() {
     sudo bash -c "mkdir -p ${4}"
 
     CONTENT_FILE="<VirtualHost *:80>
-        ServerName ${1}
-        ${ALIAS_DOMAIN}
+    ServerName ${1}
+    ${ALIAS_DOMAIN}
         
-        ServerAdmin ${SERVER_ADMIN}
-        DocumentRoot ${4}
+    ServerAdmin ${SERVER_ADMIN}
+    DocumentRoot ${4}
 
-        <Directory ${4}>
-            Options Indexes FollowSymLinks MultiViews
-            AllowOverride All
-            Order allow,deny
-            allow from all
-            Require all granted
-        </Directory>
+    <Directory ${4}>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+        Require all granted
+    </Directory>
 
-        ErrorLog ${LOG_FOLDER}/error.log
-        CustomLog ${LOG_FOLDER}/access.log combined
-    </VirtualHost>"
+    ErrorLog ${LOG_FOLDER}/error.log
+    CustomLog ${LOG_FOLDER}/access.log combined
+</VirtualHost>"
 
     sudo bash -c "echo \"${CONTENT_FILE}\" >> /etc/apache2/sites-available/${1}.conf"
     cd /etc/apache2/sites-available/
@@ -748,6 +763,7 @@ show_switch_case() {
     echo "16. Install PAGESPEED"
     echo "17. Limit size project"
     echo "18. Tang dung luong project"
+    echo "19. Tang dung luong project"
     echo "-------------------------------"
     read -p "Chon: " step
 
