@@ -302,6 +302,12 @@ delete_domain() {
         then
             sudo bash -c "sudo rm -rf ${domain}-le-ssl.conf"
     fi
+if [ -f "/etc/apache2/sites-available/${domain}-ssl.conf" ]
+        then
+            sudo bash -c "sudo rm -rf ${domain}-ssl.conf"
+    fi
+            
+            
     sudo service apache2 restart
     echo "DONE! Da xoa domain"
 }
