@@ -395,7 +395,7 @@ add_domain_ssl() {
 
     cd "/root/.acme.sh"
 
-    bash -c "bash ./acme.sh --issue --apache -d $DOMAIN $DOMAIN_ALIAS"
+    bash -c "bash ./acme.sh --issue --force --apache -d $DOMAIN $DOMAIN_ALIAS"
     
     sudo cp "/etc/apache2/sites-available/$DOMAIN.conf" "/etc/apache2/sites-available/$DOMAIN-ssl.conf"         
     
