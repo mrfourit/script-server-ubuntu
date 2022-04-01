@@ -201,11 +201,7 @@ auto_restart_service_die() {
 
     crontab -l > crontab_new
 
-    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
-        then
-            echo "Script khong duoc config"
-            exit 1
-    fi
+    show_yes_no_question
 
     if [ "${time_cron_input}" != "" ]
         then
@@ -870,6 +866,43 @@ open_port_vps() {
 
     echo "DONE! Open port ${port} thanh cong"
 }
+                    
+init_source_wordpress() {
+    echo "------------INIT SOURCE WORDPRESS-----------
+				show_yes_no_question
+    
+    read -p "Nhap duong dan website (Vi du: /var/www/web1): " path_web
+    read -p "Nhap version wordpress (Vi du: latest, 5.7.6, 5.8.3): " wordpress_version
+                        
+			 cd "${path_web}"
+                        
+    if [ ! -f "/usr/bin/unzip" ]
+          then
+																sudo apt install unzip -y          
+    fi
+    
+    if [ "${wordpress_version" == "latest" ]
+          then
+																sudo wget "https://vi.wordpress.org/latest-vi.zip"
+                 sudo unzip "latest-vi.zip"
+   								else
+   													 sudo wget "https://vi.wordpress.org/wordpress-${wordpress_version}-vi.zip"
+    													sudo unzip "wordpress-${wordpress_version}-vi.zip"
+    fi
+
+    cd wordpress
+    sudo mv ./* ../
+    sudo rm -rf wordpress
+
+    if [ "${wordpress_version}" == "latest" ]
+           then
+																	sudo rm -rf "latest-vi.zip"
+           else
+																	sudo rm -rf "wordpress-${wordpress_version}-vi.zip"
+    fi
+
+    echo "DONE! Init source wordpress thanh cong"
+}
 
 show_switch_case() {
     echo "0. Install full LAMP"
@@ -893,6 +926,7 @@ show_switch_case() {
     echo "18. Tang gioi han dung luong project"
     echo "19. Active php version"
     echo "20. Open port VPS"
+    echo "21. Khoi tao web wordpress"
     echo "-------------------------------"
     read -p "Chon: " step
 
@@ -980,6 +1014,10 @@ show_switch_case() {
         20)
             open_port_vps
             ;;
+
+								21)
+												init_source_wordpress
+												;;
 
     esac
 }
