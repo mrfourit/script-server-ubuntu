@@ -151,28 +151,43 @@ install_php() {
 }
 
 install_phpmyadmin() {
-    STR_ALIAS="Alias /phpmyadmin \"/usr/share/phpmyadmin/\"
-<Directory \"/usr/share/phpmyadmin/\">
-    Order allow,deny
-    Allow from all
-    Require all granted
-</Directory>"
-    CONFIG_PHPMYADMIN="\$cfg['blowfish_secret'] = 'L.cWeE{beVu9}yHQuHz3ki5ysndddddl';
+    if [ ! -f "/usr/bin/unzip" ]
+        then
+            sudo apt install unzip
+    fi
 
-\$cfg['TempDir'] = \"/usr/share/phpmyadmin/tmp/\";"
+    KEY=$(date | sha256sum | base64 | head -c 60; echo)
+
+    STR_ALIAS="Alias \/phpmyadmin \"\/usr\/share\/phpmyadmin\/\"\n\t\<Directory \"\/usr\/share\/phpmyadmin\/\"\>\n\t Order allow,deny\n\tAllow from all\n\tRequire all granted\n\t<\/Directory>"
+    CONFIG_PHPMYADMIN="\$cfg['blowfish_secret'] = '${KEY}';
+    \$cfg['TempDir'] = \"/usr/share/phpmyadmin/tmp/\";"
+
     sudo apt update
 
-    cd /usr/share
-    wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
-    unzip phpMyAdmin-5.1.1-all-languages.zip
-    mv phpMyAdmin-5.1.1-all-languages.zip phpmyadmin
-    sudo chmod -R 755 phpmyadmin
+    cd /usr/share &&  wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
+
+    cd /usr/share && unzip -o phpMyAdmin-5.1.1-all-languages.zip
+
+    sudo rm -rf /usr/share/phpmyadmin
+
+    mv /usr/share/phpMyAdmin-5.1.1-all-languages /usr/share/phpmyadmin
+
+    sudo rm -rf /usr/share/phpMyAdmin-5.1.1-all-languages.zip
+
+    sudo chmod -R 755 /usr/share/phpmyadmin
+
     sudo sed -i "s/<\/VirtualHost>/$STR_ALIAS\n<\/VirtualHost>/" "/etc/apache2/sites-available/000-default.conf"
-    cd phpmyadmin
-    mv config.sample.inc.php config.inc.php
-    echo "${CONFIG_PHPMYADMIN}" >> config.inc.php
-    mkdir tmp
-    chmod 777 tmp
+
+    mv /usr/share/phpmyadmin/config.sample.inc.php /usr/share/phpmyadmin/config.inc.php
+
+    echo $"${CONFIG_PHPMYADMIN}" >> /usr/share/phpmyadmin/config.inc.php
+
+    mkdir -p /usr/share/phpmyadmin/tmp
+
+    chmod 777 /usr/share/phpmyadmin/tmp
+
+    sudo service apache2 restart
+
     echo "DONE! Cai xong PHPMYADMIN"
 }
 
