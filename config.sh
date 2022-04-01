@@ -927,7 +927,9 @@ show_switch_case() {
     echo "19. Active php version"
     echo "20. Open port VPS"
     echo "21. Khoi tao web wordpress"
+
     echo "-------------------------------"
+
     read -p "Chon: " step
 
     case $step in
@@ -1015,9 +1017,9 @@ show_switch_case() {
             open_port_vps
             ;;
 
-								21)
-												init_source_wordpress
-												;;
+	21)
+	    init_source_wordpress
+            ;;
 
     esac
 }
