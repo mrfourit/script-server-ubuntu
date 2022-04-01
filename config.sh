@@ -831,6 +831,8 @@ active_php_version() {
 
     read -p "Version PHP hien tai la: php${PHP_VERSION_ACTIVE}. Vui long nhap version PHP (Vi du: 7.1): " php_version
 
+    sudo update-alternatives --set php "/usr/bin/php${php_version}"
+
     sudo a2dismod "php${PHP_VERSION_ACTIVE}"
     sudo a2enmod "php${php_version}"
 
