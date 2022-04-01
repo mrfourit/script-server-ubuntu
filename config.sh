@@ -868,7 +868,7 @@ open_port_vps() {
 }
                     
 init_source_wordpress() {
-    echo "------------INIT SOURCE WORDPRESS-----------
+    echo "------------INIT SOURCE WORDPRESS-----------"
 				show_yes_no_question
     
     read -p "Nhap duong dan website (Vi du: /var/www/web1): " path_web
