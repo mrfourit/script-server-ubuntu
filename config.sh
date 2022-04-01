@@ -566,9 +566,15 @@ show_question_increase_size_project() {
 
 add_domain() {
     ALIAS_DOMAIN="";
+    DOMAIN="${1}"
     SERVER_ADMIN="webmaster@localhost"
     LOG_FOLDER="/var/log/apache2"
 
+    if [ -f "/etc/apache2/sites-available/${DOMAIN}.conf" ]
+          echo "Loi! Da ton tai domain"
+    						 exit 1
+    fi
+    
     if [ "${1}" == "" ]
         then
             echo "Loi! Nhap du thong tin nha ban!"
@@ -768,8 +774,7 @@ show_switch_case() {
     echo "15. Delete SWAP"
     echo "16. Install PAGESPEED"
     echo "17. Limit size project"
-    echo "18. Tang dung luong project"
-    echo "19. Tang dung luong project"
+    echo "18. Tang gioi han dung luong project"
     echo "-------------------------------"
     read -p "Chon: " step
 
