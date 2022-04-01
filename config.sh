@@ -1,5 +1,28 @@
 #!/bin/bash
 
+get_php_version() {
+    MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
+    MINOR=$(php -r "echo PHP_MINOR_VERSION;")
+
+    echo "${MAJOR}.${MINOR}"
+}
+
+show_yes_no_question() {
+    question="${1}"
+
+    if [ "${question}" == "" ]
+        then
+            read -p "Ban co chac chan muon tiep tuc (Y|n): " yes_no
+        else
+            read -p "${question}" yes_no
+    fi
+    
+    if [ "${yes_no}" != "Y" ] && [ "${yes_no}" != "y" ]
+        then
+            exit 1
+    fi
+}
+
 install_apache() {
     sudo apt update
     sudo apt-get install apache2 -y
@@ -11,7 +34,7 @@ install_apache() {
 
 install_mysql() {
     sudo apt update
-    apt-get install mysql-server -y
+    sudo apt-get install mysql-server -y
 
     sudo mysql -u root -e "ALTER USER \"root\"@\"localhost\" IDENTIFIED WITH mysql_native_password BY \"${1}\";FLUSH PRIVILEGES;"
 
@@ -20,17 +43,12 @@ install_mysql() {
 
 install_php_fpm() {
     echo "-------Install PHP-FPM----------"
-    read -p "Ban co chac chan muon cai PHP-FPM (Y|N)? " yes_no
 
-    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
-        then
-            echo "PHP-FPM khong duoc cai dat"
-            exit 1
-    fi
+    show_yes_no_question
 
     sudo apt update
     sudo apt install -y libapache2-mod-fcgid
-    sudo apt install -y php7.1-fpm
+    sudo apt install -y php${php_version}-fpm
     sudo a2enmod actions fcgid alias proxy_fcgi
 
     echo "DONE! PHP-FPM"
@@ -38,13 +56,8 @@ install_php_fpm() {
 
 install_pagespeed() {
     echo "-----------Cai dat PAGESPEED------"
-    read -p "Ban co muon cai dat PAGESPEED (Y|N)?" yes_no
-    
-    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
-        then
-            echo "PAGESPEED khong duoc cai dat"
-            exit 1
-    fi
+
+    show_yes_no_question
 
     if [ -f /etc/apache2/mods-available/pagespeed.conf ]
         then
@@ -59,37 +72,50 @@ install_pagespeed() {
     sudo service apache2 restart
 }
 
-open_config_OPcache() {
-    INI_CONFIG="/etc/php/7.1/fpm/php.ini"
-    echo "------Open OPcache---------"
+replace_config_OPcache() {
+    FILE_CONFIG="${1}"
 
-    read -p "Ban co chac chan muon config OPcache (Y|N)? " yes_no
+    if [ ! -f "${FILE_CONFIG}" ]
+        then
+            echo "Khong ton tai file config php.ini"
+            exit 1
+    fi
+
+    if grep -q "^;opcache.enable=1" "${FILE_CONFIG}"
+        then
+            sed -i "s/\;opcache\.enable\=1/opcache\.enable\=1/g" "${FILE_CONFIG}"
+            sed -i "s/\;opcache\.memory_consumption\=128/opcache\.memory_consumption\=256/g" "${FILE_CONFIG}"
+            sed -i "s/\;opcache\.max_accelerated_files\=10000/opcache\.max_accelerated_files\=10000/g" "${FILE_CONFIG}"
+            sed -i "s/\;opcache\.revalidate_freq\=2/opcache\.revalidate_freq\=100/g" "${FILE_CONFIG}"
+        else
+            echo "OPcache da duoc cai dat"
+            exit 1
+    fi
+}
+
+open_config_OPcache() {
+    PHP_VERSION=$(get_php_version)
+
+    INI_CONFIG="/etc/php/${PHP_VERSION}/fpm/php.ini"
+    echo "------Open OPcache---------"
 
     if [ ! -d "/etc/php" ]
         then
             echo "Ban chua cai dat PHP"
     fi
 
-    if [ "${yes_no}" == "" ] || [ "${yes_no}" == "N" ] || [ "${yes_no}" == "n" ]
+    show_yes_no_question
+
+    if [ -f "${INI_CONFIG}" ]
         then
-            echo "OPcache khong duoc config"
-            exit 1
+            replace_config_OPcache "${INI_CONFIG}"
     fi
 
-    if [ ! -f "/etc/php/7.1/fpm/php.ini" ]
+    INI_CONFIG="/etc/php/${PHP_VERSION}/apache2/php.ini"
+
+    if [ -f "${INI_CONFIG}" ]
         then
-            INI_CONFIG="/etc/php/7.1/apache2/php.ini"
-    fi
-    
-    if grep -q "^;opcache.enable=1" "${INI_CONFIG}"
-        then
-            sed -i "s/\;opcache\.enable\=1/opcache\.enable\=1/g" "${INI_CONFIG}"
-            sed -i "s/\;opcache\.memory_consumption\=128/opcache\.memory_consumption\=256/g" "${INI_CONFIG}"
-            sed -i "s/\;opcache\.max_accelerated_files\=10000/opcache\.max_accelerated_files\=10000/g" "${INI_CONFIG}"
-            sed -i "s/\;opcache\.revalidate_freq\=2/opcache\.revalidate_freq\=100/g" "${INI_CONFIG}"
-        else
-            echo "OPcache da duoc cai dat"
-            exit 1
+            replace_config_OPcache "${INI_CONFIG}"
     fi
 
     sudo service apache2 restart
@@ -105,10 +131,22 @@ show_question_mysql() {
 }
 
 install_php() {
-    sudo apt-get install software-properties-common    
+    php_version="${1}"
+
+    if [ "${php_version}" == "" ]
+        then
+            show_yes_no_question
+            read -p "Vui long nhap version php (Vi du: 7.1): " php_version
+    fi
+
+    sudo apt-get install software-properties-common -y
+
     sudo add-apt-repository -y ppa:ondrej/php
+
     sudo apt update
-    sudo apt install -y php7.1 libapache2-mod-php7.1 php7.1-common php7.1-mbstring php7.1-xmlrpc php7.1-soap php7.1-gd php7.1-xml php7.1-intl php7.1-mysql php7.1-cli php7.1-mcrypt php7.1-zip php7.1-curl
+
+    sudo bash -c "sudo apt install -y php${php_version} libapache2-mod-php${php_version} php${php_version}-common php${php_version}-mbstring php${php_version}-xmlrpc php${php_version}-soap php${php_version}-gd php${php_version}-xml php${php_version}-intl php${php_version}-mysql php${php_version}-cli php${php_version}-mcrypt php${php_version}-zip php${php_version}-curl"
+
     echo "DONE! Cai xong PHP"
 }
 
@@ -302,7 +340,7 @@ delete_domain() {
         then
             sudo bash -c "sudo rm -rf ${domain}-le-ssl.conf"
     fi
-if [ -f "/etc/apache2/sites-available/${domain}-ssl.conf" ]
+    if [ -f "/etc/apache2/sites-available/${domain}-ssl.conf" ]
         then
             sudo bash -c "sudo rm -rf ${domain}-ssl.conf"
     fi
@@ -536,15 +574,6 @@ increase_limit_project() {
     df -h
     echo "Done! Increase limit project done"
 }
-                        
-show_yes_no_question() {
-                read -p "Ban co chac chan muon tiep tuc (Y|y|N|n): " yes_no
-    
-    if [ "${yes_no}" != "Y" ] && [ "${yes_no}" != "y" ]
-        then
-            exit 1
-    fi
-}
 
 show_question_increase_size_project() {
     echo "--------------Tang limit project----------------"
@@ -572,8 +601,8 @@ add_domain() {
 
     if [ -f "/etc/apache2/sites-available/${DOMAIN}.conf" ]
         then
-           echo "Loi! Da ton tai domain"
-    						 exit 1
+            echo "Loi! Da ton tai domain"
+            exit 1
     fi
     
     if [ "${1}" == "" ]
@@ -717,7 +746,14 @@ add_user() {
 }
 
 add_config_php_fpm() {
-    STR_INSERT="\<FilesMatch\ \\\.php\$\>\n\ SetHandler\ \"proxy\:unix\:\/var\/run\/php\/php7\.1\-fpm\.sock\|fcgi\:\/\/localhost\"\n\ \<\/FilesMatch\>\n\ DocumentRoot\ "
+    show_yes_no_question
+
+    MAJOR=$(php -r "echo PHP_MAJOR_VERSION;")
+    MINOR=$(php -r "echo PHP_MINOR_VERSION;")
+
+    PHP_VERSION="${MAJOR}\.${MINOR}"
+
+    STR_INSERT="\<FilesMatch\ \\\.php\$\>\n\ SetHandler\ \"proxy\:unix\:\/var\/run\/php\/php${PHP_VERSION}\-fpm\.sock\|fcgi\:\/\/localhost\"\n\ \<\/FilesMatch\>\n\ DocumentRoot\ "
 
     echo "--------Them config PHP-FPM vao website-------------"
     
@@ -752,15 +788,77 @@ add_config_php_fpm() {
             fi
     fi
 
+    if [ -f "/etc/apache2/sites-available/${domain}-ssl.conf" ]
+        then
+            if [[ "$(cat /etc/apache2/sites-available/${domain}-ssl.conf)" == *"proxy:unix"* || "$(cat /etc/apache2/sites-available/${domain}-ssl.conf)" == *"fcgi:"* ]]
+                then
+                    echo "Da config PHP-FPM for SSL"
+                else
+                    sed -i "s/DocumentRoot/${STR_INSERT}/g" "/etc/apache2/sites-available/${domain}-ssl.conf"
+            fi
+    fi
+
     sudo service apache2 restart
 
     echo "DONE! Them config PHP-FPM vao domain ${domain}"
 }
 
+active_php_version() {
+    read -p "Vui long nhap version PHP (Vi du: 7.1): " php_version
+
+    if  [ ! -d "/etc/php/${php_version}" ]
+        then
+            echo "Version PHP khong ton tai"
+            exit 1
+    fi
+
+    show_yes_no_question
+
+    PHP_VERSION_ACTIVE=$(get_php_version)
+
+    sudo a2dismod "${PHP_VERSION_ACTIVE}"
+    sudo a2enmod "${php_version}"
+
+    echo "DONE! Active version PHP ${php_version}"
+}
+
+install_full_lamp() {
+    show_yes_no_question
+
+    read -p "Nhap mat khau root MYSQL: " password_mysql
+    read -p "Nhap version PHP: " php_version
+
+    install_apache
+
+    install_mysql "${password_mysql}"
+
+    install_php "${php_version}"
+
+    install_phpmyadmin
+
+    echo "DONE! LAMP da duoc cai dat"
+}
+
+open_port_vps() {
+    read -p "Nhap port can mo (Vi du: 80): " port
+
+    show_yes_no_question
+
+    sudo bash -c "sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport ${port} -j ACCEPT"
+
+    if [ -f "/etc/init.d/netfilter-persistent" ]
+        then
+            sudo netfilter-persistent save
+    fi
+
+    echo "DONE! Open port ${port} thanh cong"
+}
+
 show_switch_case() {
+    echo "0. Install full LAMP"
     echo "1. Install APACHE"
     echo "2. Install MYSQL"
-    echo "3. Install PHP 7.1"
+    echo "3. Install PHP"
     echo "4. Install PHPMYADMIN"
     echo "5. Them domain"
     echo "6. Xoa domain"
@@ -776,10 +874,14 @@ show_switch_case() {
     echo "16. Install PAGESPEED"
     echo "17. Limit size project"
     echo "18. Tang gioi han dung luong project"
+    echo "19. Active php version"
     echo "-------------------------------"
     read -p "Chon: " step
 
     case $step in
+        0)
+            install_full_lamp
+            ;;
 
         1)
             install_apache
@@ -851,6 +953,14 @@ show_switch_case() {
 
         18)
             show_question_increase_size_project
+            ;;
+
+        19)
+            active_php_version
+            ;;
+
+        20)
+            open_port_vps
             ;;
 
     esac
