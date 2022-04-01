@@ -890,6 +890,7 @@ show_switch_case() {
     echo "17. Limit size project"
     echo "18. Tang gioi han dung luong project"
     echo "19. Active php version"
+    echo "20. Open port VPS"
     echo "-------------------------------"
     read -p "Chon: " step
 
