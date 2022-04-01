@@ -571,7 +571,8 @@ add_domain() {
     LOG_FOLDER="/var/log/apache2"
 
     if [ -f "/etc/apache2/sites-available/${DOMAIN}.conf" ]
-          echo "Loi! Da ton tai domain"
+        then
+           echo "Loi! Da ton tai domain"
     						 exit 1
     fi
     
