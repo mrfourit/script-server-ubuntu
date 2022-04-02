@@ -838,7 +838,7 @@ active_php_version() {
 install_full_lamp() {
     show_yes_no_question
 
-    read -p "Nhap mat khau root MYSQL: " password_mysql
+    read -p -s "Nhap mat khau root MYSQL: " password_mysql
     read -p "Nhap version PHP: " php_version
 
     install_apache
@@ -881,7 +881,7 @@ init_source_wordpress() {
 																sudo apt install unzip -y          
     fi
     
-    if [ "${wordpress_version" == "latest" ]
+    if [ "${wordpress_version}" == "latest" ]
           then
 																sudo wget "https://vi.wordpress.org/latest-vi.zip"
                  sudo unzip "latest-vi.zip"
@@ -892,6 +892,7 @@ init_source_wordpress() {
 
     cd wordpress
     sudo mv ./* ../
+    cd ..
     sudo rm -rf wordpress
 
     if [ "${wordpress_version}" == "latest" ]
@@ -926,10 +927,8 @@ show_switch_case() {
     echo "18. Tang gioi han dung luong project"
     echo "19. Active php version"
     echo "20. Open port VPS"
-    #echo "21. Khoi tao web wordpress"
-
-    #echo "-------------------------------"
-
+    echo "21. Khoi tao web wordpress"
+    echo "-------------------------------"
     read -p "Chon: " step
 
     case $step in
@@ -1017,9 +1016,9 @@ show_switch_case() {
             open_port_vps
             ;;
 
-	21)
-	    init_source_wordpress
-            ;;
+								21)
+												init_source_wordpress
+												;;
 
     esac
 }
