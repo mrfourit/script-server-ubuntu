@@ -926,9 +926,9 @@ show_switch_case() {
     echo "18. Tang gioi han dung luong project"
     echo "19. Active php version"
     echo "20. Open port VPS"
-    echo "21. Khoi tao web wordpress"
+    #echo "21. Khoi tao web wordpress"
 
-    echo "-------------------------------"
+    #echo "-------------------------------"
 
     read -p "Chon: " step
 
