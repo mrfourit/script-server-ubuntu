@@ -883,23 +883,22 @@ init_source_wordpress() {
     
     if [ "${wordpress_version}" == "latest" ]
           then
-																sudo wget "https://vi.wordpress.org/latest-vi.zip"
-                 sudo unzip "latest-vi.zip"
+																cd "${path_web}" && sudo wget "https://vi.wordpress.org/latest-vi.zip"
+                 cd "${path_web}" && sudo unzip "latest-vi.zip"
    								else
-   													 sudo wget "https://vi.wordpress.org/wordpress-${wordpress_version}-vi.zip"
-    													sudo unzip "wordpress-${wordpress_version}-vi.zip"
+   													 cd "${path_web}" && sudo wget "https://vi.wordpress.org/wordpress-${wordpress_version}-vi.zip"
+    													cd "${path_web}" && sudo unzip "wordpress-${wordpress_version}-vi.zip"
     fi
 
-    cd wordpress
-    sudo mv ./* ../
-    cd ..
-    sudo rm -rf wordpress
+    cd "${path_web}/wordpress" && sudo mv ./* ../
+
+    cd "${path_web}" && sudo rm -rf wordpress
 
     if [ "${wordpress_version}" == "latest" ]
            then
-																	sudo rm -rf "latest-vi.zip"
+																	cd "${path_web}" && sudo rm -rf "latest-vi.zip"
            else
-																	sudo rm -rf "wordpress-${wordpress_version}-vi.zip"
+																	cd "${path_web}" && sudo rm -rf "wordpress-${wordpress_version}-vi.zip"
     fi
 
     echo "DONE! Init source wordpress thanh cong"
