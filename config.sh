@@ -873,6 +873,8 @@ init_source_wordpress() {
     
     read -p "Nhap duong dan website (Vi du: /var/www/web1): " path_web
     read -p "Nhap version wordpress (Vi du: latest, 5.7.6, 5.8.3): " wordpress_version
+       
+    sudo mkdir -p "${path_web}"                  
                         
 			 cd "${path_web}"
                         
