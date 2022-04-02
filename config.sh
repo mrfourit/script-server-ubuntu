@@ -838,7 +838,7 @@ active_php_version() {
 install_full_lamp() {
     show_yes_no_question
 
-    read -p -s "Nhap mat khau root MYSQL: " password_mysql
+    read -s -p "Nhap mat khau root MYSQL: " password_mysql
     read -p "Nhap version PHP: " php_version
 
     install_apache
