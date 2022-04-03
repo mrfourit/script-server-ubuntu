@@ -45,6 +45,8 @@ install_php_fpm() {
     echo "-------Install PHP-FPM----------"
 
     show_yes_no_question
+        
+    php_version=$(get_php_version)
 
     sudo apt update
     sudo apt install -y libapache2-mod-fcgid
