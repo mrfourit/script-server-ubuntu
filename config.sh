@@ -507,7 +507,7 @@ show_question_limit_project() {
     read -p "Nhap duong dan image (filesystem): " path_image
     read -p "Nhap kich thuoc folder (size: MB): " size
 
-    if [ path_project == "" ] || [ path_image == "" ] || [ size == "" ]
+    if [ "${path_project}" == "" ] || [ "${path_image}" == "" ] || [ "${size}" == "" ]
         then
             echo "Nhap thieu thong tin"
             exit 1
