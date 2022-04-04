@@ -868,30 +868,30 @@ open_port_vps() {
 
     echo "DONE! Open port ${port} thanh cong"
 }
-                    
+
 init_source_wordpress() {
     echo "------------INIT SOURCE WORDPRESS-----------"
-				show_yes_no_question
-    
+    show_yes_no_question
+
     read -p "Nhap duong dan website (Vi du: /var/www/web1): " path_web
     read -p "Nhap version wordpress (Vi du: latest, 5.7.6, 5.8.3): " wordpress_version
-       
-    sudo mkdir -p "${path_web}"                  
-                        
-			 cd "${path_web}"
-                        
+
+    sudo mkdir -p "${path_web}"
+
+    cd "${path_web}"
+
     if [ ! -f "/usr/bin/unzip" ]
-          then
-																sudo apt install unzip -y          
+        then
+            sudo apt install unzip -y
     fi
     
     if [ "${wordpress_version}" == "latest" ]
-          then
-																cd "${path_web}" && sudo wget "https://vi.wordpress.org/latest-vi.zip"
-                 cd "${path_web}" && sudo unzip "latest-vi.zip"
-   								else
-   													 cd "${path_web}" && sudo wget "https://vi.wordpress.org/wordpress-${wordpress_version}-vi.zip"
-    													cd "${path_web}" && sudo unzip "wordpress-${wordpress_version}-vi.zip"
+        then
+            cd "${path_web}" && sudo wget "https://vi.wordpress.org/latest-vi.zip"
+            cd "${path_web}" && sudo unzip "latest-vi.zip"
+        else
+            cd "${path_web}" && sudo wget "https://vi.wordpress.org/wordpress-${wordpress_version}-vi.zip"
+            cd "${path_web}" && sudo unzip "wordpress-${wordpress_version}-vi.zip"
     fi
 
     cd "${path_web}/wordpress" && sudo mv ./* ../
@@ -899,10 +899,10 @@ init_source_wordpress() {
     cd "${path_web}" && sudo rm -rf wordpress
 
     if [ "${wordpress_version}" == "latest" ]
-           then
-																	cd "${path_web}" && sudo rm -rf "latest-vi.zip"
-           else
-																	cd "${path_web}" && sudo rm -rf "wordpress-${wordpress_version}-vi.zip"
+        then
+            cd "${path_web}" && sudo rm -rf "latest-vi.zip"
+        else
+            cd "${path_web}" && sudo rm -rf "wordpress-${wordpress_version}-vi.zip"
     fi
 
     echo "DONE! Init source wordpress thanh cong"
@@ -932,6 +932,7 @@ show_switch_case() {
     echo "20. Open port VPS"
     echo "21. Khoi tao web wordpress"
     echo "-------------------------------"
+
     read -p "Chon: " step
 
     case $step in
@@ -1019,9 +1020,9 @@ show_switch_case() {
             open_port_vps
             ;;
 
-								21)
-												init_source_wordpress
-												;;
+        21)
+            init_source_wordpress
+            ;;
 
     esac
 }
