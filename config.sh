@@ -499,24 +499,6 @@ show_question_add_domain() {
 
     add_domain "${domain}" "${domain_alias}" "${email_report}" "${path_web}"
 }
-                        
-show_question_limit_project() {
-    echo "---------------Limit project----------------"
-
-    read -p "Nhap duong dan project: " path_project
-    read -p "Nhap duong dan image (filesystem): " path_image
-    read -p "Nhap kich thuoc folder (size: MB): " size
-
-    if [ "${path_project}" == "" ] || [ "${path_image}" == "" ] || [ "${size}" == "" ]
-        then
-            echo "Nhap thieu thong tin"
-            exit 1
-    fi
-
-    show_yes_no_question "${path_project}" "${path_image}" "${size}"
-
-    limit_project "${path_project}" "${path_image}" "${size}"
-}
 
 limit_project() {
     path_project="${1}"
@@ -560,7 +542,25 @@ limit_project() {
     df -h
     echo "Done! Limit project done"
 }
-                    
+
+show_question_limit_project() {
+    echo "---------------Limit project----------------"
+
+    read -p "Nhap duong dan project: " path_project
+    read -p "Nhap duong dan image (filesystem): " path_image
+    read -p "Nhap kich thuoc folder (size: MB): " size
+
+    if [ "${path_project}" == "" ] || [ "${path_image}" == "" ] || [ "${size}" == "" ]
+        then
+            echo "Nhap thieu thong tin"
+            exit 1
+    fi
+
+    show_yes_no_question
+
+    limit_project "${path_project}" "${path_image}" "${size}"
+}
+
 increase_limit_project() {
                 path_project="${1}"
     path_image="${2}"
