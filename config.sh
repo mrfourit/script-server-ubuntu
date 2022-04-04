@@ -907,6 +907,28 @@ init_source_wordpress() {
 
     echo "DONE! Init source wordpress thanh cong"
 }
+                            
+create_database_mysql() {
+    show_yes_no_question
+                                
+    read -p "Nhap user mysql. Default: root: " user_mysql
+    read -p "Nhap mat khau mysql: " password_mysql
+    read -p "Nhap ten database: " name_database
+                                
+    if [ "${user_mysql}" == "" ]
+        then
+             user_mysql="root"
+    fi
+
+    if [ "${password_mysql}" == "" ]
+         then
+             echo "Vui long nhap mat khau mysql"
+             exit 1
+    fi
+
+    mysql -u "${user_mysql}" -p"${password_mysql}" -e "CREATE DATABASE ${name_database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+    echo "Done! Tao database thanh cong"
+}
 
 show_switch_case() {
     echo "0. Install full LAMP"
@@ -931,6 +953,8 @@ show_switch_case() {
     echo "19. Active php version"
     echo "20. Open port VPS"
     echo "21. Khoi tao web wordpress"
+    echo "22. Tao database"
+                                
     echo "-------------------------------"
 
     read -p "Chon: " step
@@ -1022,6 +1046,9 @@ show_switch_case() {
 
         21)
             init_source_wordpress
+            ;;
+        22)
+            create_database_mysql
             ;;
 
     esac
