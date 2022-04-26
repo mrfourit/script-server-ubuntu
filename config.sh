@@ -67,6 +67,8 @@ install_pagespeed() {
             exit 1
     fi
 
+    sudo apt update
+
     sudo wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
     sudo bash -c "sudo dpkg -i mod-pagespeed-stable*.deb"
     sudo bash -c "sudo rm -rf mod-pagespeed-stable*.deb"
@@ -140,6 +142,8 @@ install_php() {
             show_yes_no_question
             read -p "Vui long nhap version php (Vi du: 7.1): " php_version
     fi
+
+    sudo apt update
 
     sudo apt-get install software-properties-common -y
 
@@ -740,6 +744,8 @@ add_account_ftp() {
 install_proftpd() {
     if [ ! -f "/etc/proftpd/proftpd.conf" ]
         then
+            sudo apt update
+
             sudo apt-get install proftpd -y
 
             add_bin_false
@@ -861,10 +867,13 @@ open_port_vps() {
 
     sudo bash -c "sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport ${port} -j ACCEPT"
 
-    if [ -f "/etc/init.d/netfilter-persistent" ]
+    if [ ! -f "/etc/init.d/netfilter-persistent" ]
         then
-            sudo netfilter-persistent save
+            sudo apt update
+            sudo apt install netfilter-persistent -y
     fi
+
+    sudo netfilter-persistent save
 
     echo "DONE! Open port ${port} thanh cong"
 }
@@ -882,6 +891,8 @@ init_source_wordpress() {
 
     if [ ! -f "/usr/bin/unzip" ]
         then
+            sudo apt update
+
             sudo apt install unzip -y
     fi
     
